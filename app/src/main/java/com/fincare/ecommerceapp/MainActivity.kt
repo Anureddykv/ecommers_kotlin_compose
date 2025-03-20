@@ -10,8 +10,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MailOutline
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +32,7 @@ import com.fincare.ecommerceapp.presentation.screens.HomeScreen
 import com.fincare.ecommerceapp.presentation.screens.ProductDetailScreen
 import com.fincare.ecommerceapp.ui.theme.EcommerceappTheme
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +44,9 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "RememberReturnType",
+    "UnusedMaterial3ScaffoldPaddingParameter"
+)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
@@ -51,14 +60,17 @@ fun MainScreen() {
             mapOf("id" to 4, "title" to "Yellow Shirt", "price" to 120.00, "image" to "https://example.com/shirt.jpg", "category" to "women's clothing")
         )
     }
-
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     Scaffold(
-        bottomBar = { if (navController.currentDestination?.route != "ProductDetail/{productId}") CustomBottomNavigationBar(navController) }
+        bottomBar = {
+            if (currentRoute != "ProductDetail/{productId}") {
+                CustomBottomNavigationBar(navController)
+            }
+        }
     ) {
         NavigationGraph(navController)
     }
 }
-
 @Composable
 fun CustomBottomNavigationBar(navController: NavController) {
     val items = listOf(
@@ -69,8 +81,8 @@ fun CustomBottomNavigationBar(navController: NavController) {
         "Profile" to Icons.Outlined.Person
     )
 
-    val currentRoute by navController.currentBackStackEntryAsState()
-    val selectedTab = currentRoute?.destination?.route ?: "Home"
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val selectedItem = items.indexOfFirst { it.first == currentRoute }.takeIf { it != -1 } ?: 0
 
     Box(
         modifier = Modifier
@@ -87,19 +99,19 @@ fun CustomBottomNavigationBar(navController: NavController) {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items.forEach { (label, icon) ->
-                val isSelected = selectedTab == label
-
+            items.forEachIndexed { index, (label, icon) ->
                 Box(
                     modifier = Modifier
                         .size(50.dp)
                         .background(
-                            if (isSelected) Color.White else Color.Transparent,
+                            if (selectedItem == index) Color.White else Color.Transparent,
                             shape = CircleShape
                         )
                         .clickable {
                             navController.navigate(label) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -109,7 +121,7 @@ fun CustomBottomNavigationBar(navController: NavController) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        tint = if (isSelected) Color(0xFF815B3A) else Color.Gray,
+                        tint = if (selectedItem == index) Color(0xFF815B3A) else Color.Gray,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -119,7 +131,9 @@ fun CustomBottomNavigationBar(navController: NavController) {
 }
 
 @Composable
-fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+fun NavigationGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier) {
     NavHost(navController, startDestination = "Home", modifier = modifier) {
         composable("Home") { HomeScreen(navController) }
         composable("Cart") { CartScreen() }
@@ -128,26 +142,33 @@ fun NavigationGraph(navController: NavHostController, modifier: Modifier = Modif
         composable("Profile") { ProfileScreen() }
         composable("ProductDetail/{productId}") { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
-            ProductDetailScreen(productId, navController)
+            ProductDetailScreen(productId, navController,)
         }
+
+
     }
 }
-
-// Screens (Placeholders)
-@Composable fun CartScreen() = ScreenContent("Cart")
-@Composable fun FavoritesScreen() = ScreenContent("Favorites")
-@Composable fun MessagesScreen() = ScreenContent("Messages")
-@Composable fun ProfileScreen() = ScreenContent("Profile")
 
 @Composable
-fun ScreenContent(title: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = "$title Screen", modifier = Modifier.padding(16.dp))
-    }
+fun CartScreen() {
+    Text("Cart Screen", modifier = Modifier.padding(16.dp))
 }
+
+@Composable
+fun FavoritesScreen() {
+    Text("Favorites Screen", modifier = Modifier.padding(16.dp))
+}
+
+@Composable
+fun MessagesScreen() {
+    Text("Messages Screen", modifier = Modifier.padding(16.dp))
+}
+
+@Composable
+fun ProfileScreen() {
+    Text("Profile Screen", modifier = Modifier.padding(16.dp))
+}
+
 
 @Preview
 @Composable
