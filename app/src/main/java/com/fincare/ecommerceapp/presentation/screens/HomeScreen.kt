@@ -89,11 +89,13 @@ fun HomeScreen(navController: NavHostController) {
                         "title" to product.title,
                         "price" to product.price,
                         "image" to product.image,
-                        "category" to product.category
+                        "category" to product.category,
+                        "rating" to product.rating.rate as Any
                     )
                 }
                 productList = tempList
             } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -196,12 +198,13 @@ fun FlashSaleSection(
             when (selectedTab) {
                 "Newest" -> productList.sortedByDescending { (it["timestamp"] as? Long) ?: System.currentTimeMillis() }
                 "Popular" -> productList.filter { (it["isPopular"] as? Boolean) ?: false }
-                "Men" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "men" }
-                "Women" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "women" }
+                "Men" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "men's clothing" }
+                "Women" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "women's clothing" }
                 else -> productList
             }
         }
     }
+
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -249,7 +252,6 @@ fun FlashSaleSection(
                 Column(
                     modifier = Modifier
                         .fillMaxSize(),
-                       // .verticalScroll(rememberScrollState()), // ✅ Make it scrollable
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     filteredProducts.chunked(2).forEach { rowProducts ->
@@ -302,7 +304,8 @@ fun ProductCard(
     val imageUrl = product["image"] as? String ?: ""
     val title = product["title"] as? String ?: "No Title"
     val price = product["price"] as? Double ?: 0.0
-    val rating = (product["rating"] as? Map<*, *>)?.get("rate") as? Double ?: 0.0
+    val rating = product["rating"] as? Double
+
 
     Card(
         modifier = Modifier
@@ -366,7 +369,7 @@ fun ProductCard(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = rating.toString(),
+                    text = "$rating",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
