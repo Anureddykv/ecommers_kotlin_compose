@@ -1,6 +1,5 @@
 package com.fincare.ecommerceapp.presentation.screens
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,16 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
@@ -76,10 +74,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue()) }
-    val coroutineScope = rememberCoroutineScope()
-    var productList by remember { mutableStateOf(emptyList<Map<String, Any>>()) }
+    var productList by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
     val favorites = remember { mutableStateOf(setOf<Int>()) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
@@ -90,87 +88,100 @@ fun HomeScreen(navController: NavHostController) {
                         "id" to product.id,
                         "title" to product.title,
                         "price" to product.price,
-                        "image" to product.image
+                        "image" to product.image,
+                        "category" to product.category
                     )
                 }
                 productList = tempList
             } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }
 
-
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color(0xFF6D4C41))
-                Text("New York, USA", style = MaterialTheme.typography.bodyLarge , modifier = Modifier.padding(start = 4.dp))
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = Color(0xFF6D4C41))
+                    Text("New York, USA", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 4.dp))
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
+                }
+
+                Box {
+                    Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(30.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(Color.Red, shape = CircleShape)
+                            .align(Alignment.TopEnd)
+                    )
+                }
             }
 
-            Box {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifications", modifier = Modifier.size(30.dp))
-                Box(
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5), shape = MaterialTheme.shapes.medium)
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF6D4C41))
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
                     modifier = Modifier
-                        .size(10.dp)
-                        .background(Color.Red, shape = CircleShape)
-                        .align(Alignment.TopEnd)
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (searchQuery.text.isEmpty()) {
+                                Text("Search", color = Color.Gray)
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Filter",
+                    tint = Color(0xFF6D4C41),
+                    modifier = Modifier.size(30.dp)
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFFF5F5F5), shape = MaterialTheme.shapes.medium)
-                .padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF6D4C41))
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (searchQuery.text.isEmpty()) {
-                            Text("Search", color = Color.Gray)
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Filter",
-                tint = Color(0xFF6D4C41),
-                modifier = Modifier.size(30.dp)
-            )
+            Column {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                PromotionalBanner()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                CategorySection()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                FlashSaleSection(productList, navController, favorites)
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        PromotionalBanner()
-        Spacer(modifier = Modifier.height(16.dp))
-
-        CategorySection()
-        Spacer(modifier = Modifier.height(16.dp))
-
-        FlashSaleSection(productList, navController,favorites)
-        Spacer(modifier = Modifier.height(8.dp))
-
     }
 }
+
 @Composable
 fun FlashSaleSection(
     productList: List<Map<String, Any>>,
@@ -183,25 +194,16 @@ fun FlashSaleSection(
     val filteredProducts by remember(selectedTab, productList) {
         derivedStateOf {
             when (selectedTab) {
-                "Newest" -> productList.sortedByDescending { (it["timestamp"] as? Long) ?: 0L }
+                "Newest" -> productList.sortedByDescending { (it["timestamp"] as? Long) ?: System.currentTimeMillis() }
                 "Popular" -> productList.filter { (it["isPopular"] as? Boolean) ?: false }
-                "Men" -> productList.filter {
-                    val category = it["category"]?.toString()?.lowercase()?.trim() ?: ""
-                    Log.d("CATEGORY_CHECK", "Product: ${it["title"]}, Category: $category")
-                    category.contains("men")
-                }
-                "Women" -> productList.filter {
-                    val category = it["category"]?.toString()?.lowercase()?.trim() ?: ""
-                    category.contains("women")
-                }
-
+                "Men" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "men" }
+                "Women" -> productList.filter { it["category"]?.toString()?.lowercase()?.trim() == "women" }
                 else -> productList
             }
         }
     }
 
-
-    Column(modifier = Modifier.padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -222,7 +224,8 @@ fun FlashSaleSection(
                     onClick = { selectedTab = category },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (selectedTab == category) Color(0xFF6D4C41) else Color.White,
-                        contentColor = if (selectedTab == category) Color.White else Color.Black  ),
+                        contentColor = if (selectedTab == category) Color.White else Color.Black
+                    ),
                     shape = RoundedCornerShape(20.dp),
                     border = BorderStroke(1.dp, Color.LightGray),
                     modifier = Modifier.height(40.dp)
@@ -242,38 +245,52 @@ fun FlashSaleSection(
                 fontSize = 16.sp
             )
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredProducts) { product ->
-                    val productId = product["id"] as? Int ?: return@items
-                    ProductCard(
-                        product = product,
-                        isFavorite = favorites.value.contains(productId),
-                        onFavoriteClick = {
-                            if (favorites.value.contains(productId)) {
-                                favorites.value = favorites.value - productId
-                            } else {
-                                favorites.value = favorites.value + productId
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                       // .verticalScroll(rememberScrollState()), // ✅ Make it scrollable
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    filteredProducts.chunked(2).forEach { rowProducts ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowProducts.forEach { product ->
+                                val productId = product["id"] as? Int ?: return@forEach
+
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ProductCard(
+                                        product = product,
+                                        isFavorite = favorites.value.contains(productId),
+                                        onFavoriteClick = {
+                                            favorites.value = favorites.value.toMutableSet().apply {
+                                                if (contains(productId)) remove(productId) else add(productId)
+                                            }
+                                        },
+                                        onClick = {
+                                            val id = product["id"] as? Int
+                                            if (id != null) {
+                                                navController.navigate("ProductDetail/$id")
+                                            }
+                                        }
+                                    )
+                                }
                             }
-                        },
-                        onClick = {
-                            val id = product["id"] as? Int
-                            if (id != null) {
-                                navController.navigate("ProductDetail/$id")
+
+                            if (rowProducts.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
-
-                    )
-
+                    }
                 }
             }
+
         }
     }
 }
+
 
 @Composable
 fun ProductCard(
@@ -297,7 +314,6 @@ fun ProductCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Product Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
